@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strconv"
 
-	//	pp "github.com/k0kubun/pp"
+	//pp "github.com/k0kubun/pp"
 	mp "github.com/mackerelio/go-mackerel-plugin"
 )
 
@@ -38,6 +38,12 @@ var memoryItems = map[string]string{
 	"MemUsedPercentage":  "used",
 	"SwapTotal":          "swap_total",
 	"SwapUsedPercentage": "swap_used",
+}
+
+var diskReg = regexp.MustCompile(`^Disk\t(.+)\t(.+)\t(.+)`)
+var diskItems = map[string]string{
+	"/":               "disk_root",
+	"/mnt/srslogdisk": "disk_srslogdisk",
 }
 
 // FetchMetrics interface for mackerelplugin
@@ -70,6 +76,16 @@ func (p CuenoteSrsServerStatusPlugin) FetchMetrics() (map[string]float64, error)
 			value, _ := strconv.ParseFloat(matches[2], 32)
 			memoryInfo[k] = value
 		}
+		if matches := diskReg.FindStringSubmatch(line); len(matches) == 4 {
+			k, ok := diskItems[matches[1]]
+			if !ok {
+				continue
+			}
+			size, _ := strconv.ParseFloat(matches[2], 32)
+			used, _ := strconv.ParseFloat(matches[3], 32)
+			ret[k+"_size"] = size
+			ret[k+"_used"] = size * used / 100
+		}
 	}
 
 	ret["mem_total"] = memoryInfo["total"]
@@ -98,6 +114,16 @@ func (p CuenoteSrsServerStatusPlugin) GraphDefinition() map[string]mp.Graphs {
 				{Name: "mem_used", Label: "total", Diff: false, Stacked: true, Scale: 1000},
 				{Name: "mem_swap_total", Label: "swap total", Diff: false, Stacked: false, Scale: 1000},
 				{Name: "mem_swap_used", Label: "swap total", Diff: false, Stacked: true, Scale: 1000},
+			},
+		},
+		"cuenote-srs.disk": {
+			Label: "Disk",
+			Unit:  "bytes",
+			Metrics: []mp.Metrics{
+				{Name: "disk_root_size", Label: "/ size", Diff: false, Stacked: false, Scale: 1000},
+				{Name: "disk_root_used", Label: "/ used", Diff: false, Stacked: false, Scale: 1000},
+				{Name: "disk_srslogdisk_size", Label: "/mnt/srslogdisk size", Diff: false, Stacked: false, Scale: 1000},
+				{Name: "disk_srslogdisk_used", Label: "/mnt/srslogdisk used", Diff: false, Stacked: false, Scale: 1000},
 			},
 		},
 	}
