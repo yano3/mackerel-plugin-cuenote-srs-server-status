@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"strconv"
 
-	//pp "github.com/k0kubun/pp"
 	mp "github.com/mackerelio/go-mackerel-plugin"
 )
 
@@ -100,24 +99,24 @@ func (p CuenoteSrsServerStatusPlugin) FetchMetrics() (map[string]float64, error)
 func (p CuenoteSrsServerStatusPlugin) GraphDefinition() map[string]mp.Graphs {
 	var graphdef = map[string]mp.Graphs{
 		"cuenote-srs.loadavg": {
-			Label: "loadavg",
+			Label: "Cuenote SR-S Load Average",
 			Unit:  "float",
 			Metrics: []mp.Metrics{
 				{Name: "loadavg5", Label: "loadavg5", Diff: false, Stacked: false},
 			},
 		},
 		"cuenote-srs.memory": {
-			Label: "Memory",
+			Label: "Cuenote SR-S Memory",
 			Unit:  "bytes",
 			Metrics: []mp.Metrics{
 				{Name: "mem_total", Label: "total", Diff: false, Stacked: false, Scale: 1000},
-				{Name: "mem_used", Label: "total", Diff: false, Stacked: true, Scale: 1000},
+				{Name: "mem_used", Label: "used", Diff: false, Stacked: true, Scale: 1000},
 				{Name: "mem_swap_total", Label: "swap total", Diff: false, Stacked: false, Scale: 1000},
-				{Name: "mem_swap_used", Label: "swap total", Diff: false, Stacked: true, Scale: 1000},
+				{Name: "mem_swap_used", Label: "swap used", Diff: false, Stacked: false, Scale: 1000},
 			},
 		},
 		"cuenote-srs.disk": {
-			Label: "Disk",
+			Label: "Cuenote SR-S Disk",
 			Unit:  "bytes",
 			Metrics: []mp.Metrics{
 				{Name: "disk_root_size", Label: "/ size", Diff: false, Stacked: false, Scale: 1000},
