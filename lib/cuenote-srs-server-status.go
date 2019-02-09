@@ -32,6 +32,14 @@ func (p CuenoteSrsServerStatusPlugin) MetricKeyPrefix() string {
 
 var loadAverageReg = regexp.MustCompile(`^(LoadAverage)\t(.+)\t(.+)\t(.+)`)
 
+var memoryReg = regexp.MustCompile(`^Memory\t(.+)\t(.+)`)
+var memoryItems = map[string]string{
+	"MemTotal":           "total",
+	"MemUsedPercentage":  "used",
+	"SwapTotal":          "swap_total",
+	"SwapUsedPercentage": "swap_used",
+}
+
 // FetchMetrics interface for mackerelplugin
 func (p CuenoteSrsServerStatusPlugin) FetchMetrics() (map[string]float64, error) {
 	Url := "https://" + p.Username + ":" + p.Password + "@" + p.Host + "/api?cmd=get_server_status"
@@ -47,13 +55,28 @@ func (p CuenoteSrsServerStatusPlugin) FetchMetrics() (map[string]float64, error)
 	}
 
 	ret := make(map[string]float64)
+	memoryInfo := make(map[string]float64)
 	scanner := bufio.NewScanner(bytes.NewReader(body))
 	for scanner.Scan() {
 		line := scanner.Text()
 		if matches := loadAverageReg.FindStringSubmatch(line); len(matches) == 5 {
 			ret["loadavg5"], _ = strconv.ParseFloat(matches[3], 32)
 		}
+		if matches := memoryReg.FindStringSubmatch(line); len(matches) == 3 {
+			k, ok := memoryItems[matches[1]]
+			if !ok {
+				continue
+			}
+			value, _ := strconv.ParseFloat(matches[2], 32)
+			memoryInfo[k] = value
+		}
 	}
+
+	ret["mem_total"] = memoryInfo["total"]
+	ret["mem_used"] = memoryInfo["total"] * memoryInfo["used"] / 100
+	ret["mem_swap_total"] = memoryInfo["swap_total"]
+	ret["mem_swap_used"] = memoryInfo["swap_total"] * memoryInfo["swap_used"] / 100
+
 	return ret, nil
 }
 
@@ -65,6 +88,16 @@ func (p CuenoteSrsServerStatusPlugin) GraphDefinition() map[string]mp.Graphs {
 			Unit:  "float",
 			Metrics: []mp.Metrics{
 				{Name: "loadavg5", Label: "loadavg5", Diff: false, Stacked: false},
+			},
+		},
+		"cuenote-srs.memory": {
+			Label: "Memory",
+			Unit:  "bytes",
+			Metrics: []mp.Metrics{
+				{Name: "mem_total", Label: "total", Diff: false, Stacked: false, Scale: 1000},
+				{Name: "mem_used", Label: "total", Diff: false, Stacked: true, Scale: 1000},
+				{Name: "mem_swap_total", Label: "swap total", Diff: false, Stacked: false, Scale: 1000},
+				{Name: "mem_swap_used", Label: "swap total", Diff: false, Stacked: true, Scale: 1000},
 			},
 		},
 	}
