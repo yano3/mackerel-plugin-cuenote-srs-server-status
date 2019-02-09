@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -14,9 +15,7 @@ import (
 
 // CuenoteSrsServerStatusPlugin mackerel plugin for Cuenote SR-S server status
 type CuenoteSrsServerStatusPlugin struct {
-	Host     string
-	Username string
-	Password string
+	URI      string
 	Tempfile string
 	Prefix   string
 }
@@ -47,8 +46,7 @@ var diskItems = map[string]string{
 
 // FetchMetrics interface for mackerelplugin
 func (p CuenoteSrsServerStatusPlugin) FetchMetrics() (map[string]float64, error) {
-	Url := "https://" + p.Username + ":" + p.Password + "@" + p.Host + "/api?cmd=get_server_status"
-	resp, err := http.Get(Url)
+	resp, err := http.Get(p.URI)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +131,9 @@ func (p CuenoteSrsServerStatusPlugin) GraphDefinition() map[string]mp.Graphs {
 
 // Do the plugin
 func Do() {
+	optURI := flag.String("uri", "", "URI")
 	optHost := flag.String("host", "", "Hostname")
+	optPath := flag.String("path", "/api?cmd=get_server_status", "Path")
 	optUser := flag.String("username", "", "Username")
 	optPass := flag.String("password", "", "Password")
 	optPrefix := flag.String("metric-key-prefix", "cuenote-srs", "Metric key prefix")
@@ -141,10 +141,12 @@ func Do() {
 	flag.Parse()
 
 	var cuenoteSrsServerStatus CuenoteSrsServerStatusPlugin
+	if *optURI != "" {
+		cuenoteSrsServerStatus.URI = *optURI
+	} else {
+		cuenoteSrsServerStatus.URI = fmt.Sprintf("https://%s:%s@%s%s", *optUser, *optPass, *optHost, *optPath)
+	}
 
-	cuenoteSrsServerStatus.Host = *optHost
-	cuenoteSrsServerStatus.Username = *optUser
-	cuenoteSrsServerStatus.Password = *optPass
 	cuenoteSrsServerStatus.Prefix = *optPrefix
 
 	helper := mp.NewMackerelPlugin(cuenoteSrsServerStatus)
