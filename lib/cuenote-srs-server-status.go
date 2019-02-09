@@ -87,10 +87,12 @@ func (p CuenoteSrsServerStatusPlugin) FetchMetrics() (map[string]float64, error)
 		}
 	}
 
-	ret["mem_total"] = memoryInfo["total"]
-	ret["mem_used"] = memoryInfo["total"] * memoryInfo["used"] / 100
-	ret["mem_swap_total"] = memoryInfo["swap_total"]
-	ret["mem_swap_used"] = memoryInfo["swap_total"] * memoryInfo["swap_used"] / 100
+	if len(memoryInfo) == 4 {
+		ret["mem_total"] = memoryInfo["total"]
+		ret["mem_used"] = memoryInfo["total"] * memoryInfo["used"] / 100
+		ret["mem_swap_total"] = memoryInfo["swap_total"]
+		ret["mem_swap_used"] = memoryInfo["swap_total"] * memoryInfo["swap_used"] / 100
+	}
 
 	return ret, nil
 }
