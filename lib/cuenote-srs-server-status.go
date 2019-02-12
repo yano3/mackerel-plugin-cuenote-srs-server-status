@@ -99,14 +99,14 @@ func (p CuenoteSrsServerStatusPlugin) FetchMetrics() (map[string]float64, error)
 func (p CuenoteSrsServerStatusPlugin) GraphDefinition() map[string]mp.Graphs {
 	var graphdef = map[string]mp.Graphs{
 		"cuenote-srs.loadavg": {
-			Label: "Cuenote SR-S Load Average",
+			Label: "Cuenote SR-S Server Load Average",
 			Unit:  "float",
 			Metrics: []mp.Metrics{
 				{Name: "loadavg5", Label: "loadavg5", Diff: false, Stacked: false},
 			},
 		},
 		"cuenote-srs.memory": {
-			Label: "Cuenote SR-S Memory",
+			Label: "Cuenote SR-S Server Memory",
 			Unit:  "bytes",
 			Metrics: []mp.Metrics{
 				{Name: "mem_total", Label: "total", Diff: false, Stacked: false, Scale: 1000},
@@ -116,7 +116,7 @@ func (p CuenoteSrsServerStatusPlugin) GraphDefinition() map[string]mp.Graphs {
 			},
 		},
 		"cuenote-srs.disk": {
-			Label: "Cuenote SR-S Disk",
+			Label: "Cuenote SR-S Server Disk",
 			Unit:  "bytes",
 			Metrics: []mp.Metrics{
 				{Name: "disk_root_size", Label: "/ size", Diff: false, Stacked: false, Scale: 1000},
